@@ -124,9 +124,9 @@ I Opened a new file called info.php within my document root in my text editor to
 
 - Afterwards, I pasted the php code and saved it. (to return information about my server)
  
- <?php
+ `<?php
 phpinfo();
-
+`
 - i tried the cmd on my browsser and got the welcome message
 
 - I used below cmd to remove the file I created:
@@ -220,4 +220,3 @@ I can now access this page in your web browser by visiting the domain name or pu
 The image below shows PHP environment is ready to connect and interact with your MySQL server.
 
 ![image](https://github.com/Itsjustfemi/cohort_learning/assets/98546783/9c51ba2e-4cc4-407b-a670-ba99f48ff586)
-
