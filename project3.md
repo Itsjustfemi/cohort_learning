@@ -70,14 +70,15 @@ Open up your browser and try to access your server’s Public IP or Public DNS n
 ## MODELS
 For the todo app to perform different tasks, we need to create api endpoints. This endpoints will use the POST, GET, and DELETE methods.
 
-Create routes folder and create an api.js file that is going to contain the api endpoints.
-
-`mkdir routes`
-
+- Create routes folder and create an api.js file that is going to contain the api endpoints.
+```
+mkdir routes
 touch api.js
+```
 
-Edit api.js with the following code block:
-```const express = require ('express');
+- Edit api.js with the following code block:
+```
+const express = require ('express');
 const router = express.Router();
 
 router.get('/todos', (req, res, next) => {
@@ -101,3 +102,126 @@ Install mongoose which helps us connect to mongodb.
 
 ![image](https://github.com/Itsjustfemi/cohort_learning/assets/98546783/b0e15a99-984d-477e-aa49-1a0ce736f585)
 
+- Create models folder and create a todo.js file in it.
+```
+mkdir models
+touch todo.js
+```
+Edit todo.js with the following code block:
+```
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
+//create schema for todo
+const TodoSchema = new Schema({
+action: {
+type: String,
+required: [true, 'The todo text field is required']
+}
+})
+
+//create model for todo
+const Todo = mongoose.model('todo', TodoSchema);
+
+module.exports = Todo;
+```
+
+- Update the api.js file in routes folder to include the following code which will make use of model:
+```
+const express = require ('express');
+const router = express.Router();
+const Todo = require('../models/todo');
+
+router.get('/todos', (req, res, next) => {
+
+//this will return all the data, exposing only the id and action field to the client
+Todo.find({}, 'action')
+.then(data => res.json(data))
+.catch(next)
+});
+
+router.post('/todos', (req, res, next) => {
+if(req.body.action){
+Todo.create(req.body)
+.then(data => res.json(data))
+.catch(next)
+}else {
+res.json({
+error: "The input field is empty"
+})
+}
+});
+
+router.delete('/todos/:id', (req, res, next) => {
+Todo.findOneAndDelete({"_id": req.params.id})
+.then(data => res.json(data))
+.catch(next)
+})
+
+module.exports = router;
+```
+
+### MONGODB DATABASE
+
+- Create a modngoDB database on mongodb.com, create a user, allow connection anywhere and also create a collection called todo.
+
+![](./images/p3/ScreenShot_4_6_2022_11_44_22_PM.png)
+
+- Create a .env file in the root directory of the project and add the following code:
+```
+DB = 'mongodb+srv://<username>:<password>@<network-address>/<dbname>?retryWrites=true&w=majority'
+```
+
+![](./images/p3/ScreenShot_4_6_2022_11_53_24_PM.png)
+
+- Edit the index.js file to include the following code:
+```
+const express = require('express');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const routes = require('./routes/api');
+const path = require('path');
+require('dotenv').config();
+
+const app = express();
+const port = process.env.PORT || 5000;
+
+//connect to the database
+mongoose.connect(process.env.DB, { useNewUrlParser: true, useUnifiedTopology: true })
+.then(() => console.log(`Database connected successfully`))
+.catch(err => console.log(err));
+
+//since mongoose promise is depreciated, we overide it with node's promise
+mongoose.Promise = global.Promise;
+
+app.use((req, res, next) => {
+res.header("Access-Control-Allow-Origin", "\*");
+res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+next();
+});
+
+app.use(bodyParser.json());
+
+app.use('/api', routes);
+
+app.use((err, req, res, next) => {
+console.log(err);
+next();
+});
+app.listen(port, () => {
+console.log(`Server running on port ${port}`)
+});
+```
+- Run the server by running the command `node index.js`
+
+![](./images/p3/ScreenShot_4_11_2022_1_23_54_PM.png)
+
+As you can see from tht above image, i had some issues running the server, after some troubleshooting, i discovered i had to kill the current running process on port 5000 for the new one to begin. This i did by first getting the Process Id(PID) for the current process `lsof -i tcp:5000` 
+
+After i got the PID, i killed it using the kill command:
+
+`kill -9 "<the PID>"`
+
+- The images bellow show the use of POST method to query the database.
+
+![](./images/p3/ScreenShot_4_11_2022_3_36_59_PM.png)
